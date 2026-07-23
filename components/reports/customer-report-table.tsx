@@ -15,13 +15,22 @@ const avatarColors = [
   'bg-red-100 text-red-700',
 ]
 
-interface CustomerReportTableProps {
-  transactions: Transaction[]
-  creditTransactions: CreditTransaction[]
+export interface CustomerReportRow {
+  id: string
+  name: string
+  totalTxs: number
+  completedTxs: number
+  cancelledTxs: number
+  total: number
+  avg: number
+  creditsUsed: number
+  creditsAdded: number
 }
 
-export function CustomerReportTable({ transactions, creditTransactions }: CustomerReportTableProps) {
-  // Group transactions by customer
+export function buildCustomerReportRows(
+  transactions: Transaction[],
+  creditTransactions: CreditTransaction[]
+): CustomerReportRow[] {
   const map = new Map<
     string,
     {
@@ -45,7 +54,7 @@ export function CustomerReportTable({ transactions, creditTransactions }: Custom
     else map.get(ct.customerId)!.creditsAdded += ct.amount
   })
 
-  const rows = Array.from(map.entries())
+  return Array.from(map.entries())
     .map(([id, d]) => {
       const completed = d.txs.filter((t) => t.status === 'completada')
       const total = completed.reduce((s, t) => s + t.total, 0)
@@ -62,6 +71,15 @@ export function CustomerReportTable({ transactions, creditTransactions }: Custom
       }
     })
     .sort((a, b) => b.total - a.total)
+}
+
+interface CustomerReportTableProps {
+  transactions: Transaction[]
+  creditTransactions: CreditTransaction[]
+}
+
+export function CustomerReportTable({ transactions, creditTransactions }: CustomerReportTableProps) {
+  const rows = buildCustomerReportRows(transactions, creditTransactions)
 
   if (rows.length === 0) {
     return (

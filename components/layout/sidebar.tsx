@@ -46,7 +46,7 @@ export function Sidebar({ storeName = 'VentasPOS', user }: { storeName?: string;
   const visibleBottomItems = bottomItems.filter((item) => !item.adminOnly || isAdmin)
 
   return (
-    <aside className="w-[220px] h-screen bg-white border-r border-gray-100 flex flex-col flex-shrink-0">
+    <aside className="w-[220px] h-screen bg-white border-r border-gray-100 flex flex-col flex-shrink-0 print:hidden">
       {/* Logo */}
       <div className="p-5 pb-4 border-b border-gray-100">
         <div className="flex items-center gap-2.5">

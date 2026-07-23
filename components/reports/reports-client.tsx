@@ -3,15 +3,18 @@
 import { useState, useMemo } from 'react'
 import { DateRangeFilter, DatePreset } from '@/components/reports/date-range-filter'
 import { ReportSummaryCards } from '@/components/reports/report-summary-cards'
-import { CustomerReportTable } from '@/components/reports/customer-report-table'
+import { CustomerReportTable, buildCustomerReportRows } from '@/components/reports/customer-report-table'
 import { TransactionsByDate } from '@/components/reports/transactions-by-date'
 import { SalesByPeriodChart } from '@/components/reports/sales-by-period-chart'
 import { CreditMovementsReport } from '@/components/reports/credit-movements-report'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Download, Printer, Users, List, Wallet } from 'lucide-react'
+import { downloadCSV } from '@/lib/csv'
 import type { Transaction, CreditTransaction } from '@/types'
 import type { CreditMovement } from '@/lib/actions/credits'
+
+type ReportTab = 'customers' | 'transactions' | 'credits'
 
 function getPresetRange(preset: DatePreset): { from: string; to: string } {
   const today = new Date()
@@ -57,6 +60,7 @@ export function ReportsClient({ initialTransactions, initialCreditTxs, initialCr
   const initialRange = getPresetRange('historic')
   const [from, setFrom] = useState(initialRange.from)
   const [to, setTo] = useState(initialRange.to)
+  const [activeTab, setActiveTab] = useState<ReportTab>('customers')
 
   const handlePresetChange = (p: DatePreset) => {
     setPreset(p)
@@ -86,6 +90,40 @@ export function ReportsClient({ initialTransactions, initialCreditTxs, initialCr
       ? from
       : `${from} — ${to}`
 
+  const handleExportCSV = () => {
+    const suffix = `${from}_a_${to}`
+
+    if (activeTab === 'customers') {
+      const rows = buildCustomerReportRows(filteredTransactions, filteredCreditTxs)
+      downloadCSV(
+        `reporte-clientes_${suffix}.csv`,
+        ['Cliente', 'ID', 'Transacciones', 'Completadas', 'Canceladas', 'Total Comprado', 'Ticket Promedio', 'Crédito Usado', 'Crédito Agregado'],
+        rows.map((r) => [r.name, r.id, r.totalTxs, r.completedTxs, r.cancelledTxs, r.total.toFixed(2), r.avg.toFixed(2), r.creditsUsed.toFixed(2), r.creditsAdded.toFixed(2)])
+      )
+      return
+    }
+
+    if (activeTab === 'transactions') {
+      downloadCSV(
+        `reporte-transacciones_${suffix}.csv`,
+        ['ID', 'Fecha', 'Cliente', 'Artículos', 'Subtotal', 'Descuento', 'Impuesto', 'Total', 'Método de Pago', 'Estado'],
+        filteredTransactions.map((tx) => [
+          tx.id, tx.date, tx.customerName, tx.items.length,
+          tx.subtotal.toFixed(2), tx.discount.toFixed(2), tx.tax.toFixed(2), tx.total.toFixed(2),
+          tx.paymentMethod, tx.status,
+        ])
+      )
+      return
+    }
+
+    const creditRows = initialCreditMovements.filter((m) => m.date >= from && m.date <= to)
+    downloadCSV(
+      `reporte-creditos_${suffix}.csv`,
+      ['Fecha', 'Cliente', 'Email', 'Tipo', 'Descripción', 'Monto', 'Saldo Anterior', 'Saldo Resultante'],
+      creditRows.map((m) => [m.date, m.customerName, m.customerEmail, m.type, m.reason, m.amount.toFixed(2), m.balanceBefore.toFixed(2), m.balanceAfter.toFixed(2)])
+    )
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-5">
       <div className="flex items-start justify-between flex-wrap gap-3">
@@ -102,32 +140,34 @@ export function ReportsClient({ initialTransactions, initialCreditTxs, initialCr
             )}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex gap-2 print:hidden">
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="w-4 h-4 mr-2" />
             Imprimir
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExportCSV}>
             <Download className="w-4 h-4 mr-2" />
             Exportar CSV
           </Button>
         </div>
       </div>
 
-      <DateRangeFilter
-        from={from}
-        to={to}
-        preset={preset}
-        onPresetChange={handlePresetChange}
-        onFromChange={(d) => { setFrom(d); setPreset('custom') }}
-        onToChange={(d) => { setTo(d); setPreset('custom') }}
-      />
+      <div className="print:hidden">
+        <DateRangeFilter
+          from={from}
+          to={to}
+          preset={preset}
+          onPresetChange={handlePresetChange}
+          onFromChange={(d) => { setFrom(d); setPreset('custom') }}
+          onToChange={(d) => { setTo(d); setPreset('custom') }}
+        />
+      </div>
 
       <ReportSummaryCards transactions={filteredTransactions} />
 
       <SalesByPeriodChart transactions={filteredTransactions} />
 
-      <Tabs defaultValue="customers" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab((v as ReportTab) ?? 'customers')} className="space-y-4">
         <TabsList className="bg-gray-100 p-1">
           <TabsTrigger value="customers" className="flex items-center gap-1.5 text-xs">
             <Users className="w-3.5 h-3.5" />
