@@ -2,6 +2,8 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { getSettings } from '@/lib/actions/settings'
 import { getSession } from '@/lib/session'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PosLayout({ children }: { children: React.ReactNode }) {
   const { storeName } = await getSettings()
   const session = await getSession()
