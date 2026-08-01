@@ -14,6 +14,8 @@ import {
   Store,
   BarChart2,
   LogOut,
+  UserCog,
+  AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/lib/actions/auth'
@@ -26,10 +28,11 @@ const navItems = [
   { label: 'Transacciones', href: '/transactions', icon: ArrowLeftRight },
   { label: 'Notas de Venta', href: '/invoice', icon: FileText },
   { label: 'Clientes', href: '/customers', icon: Users },
-  { label: 'Productos', href: '/products', icon: Store },
+  { label: 'Productos', href: '/products', icon: Store, showLowStock: true },
 ]
 
 const bottomItems = [
+  { label: 'Usuarios', href: '/users', icon: UserCog, adminOnly: true },
   { label: 'Configuración', href: '/settings', icon: Settings, adminOnly: true },
   { label: 'Centro de ayuda', href: '#', icon: HelpCircle },
 ]
@@ -39,7 +42,15 @@ interface SidebarUser {
   role: string
 }
 
-export function Sidebar({ storeName = 'VentasPOS', user }: { storeName?: string; user?: SidebarUser }) {
+export function Sidebar({
+  storeName = 'VentasPOS',
+  user,
+  lowStockCount = 0,
+}: {
+  storeName?: string
+  user?: SidebarUser
+  lowStockCount?: number
+}) {
   const pathname = usePathname()
   const isAdmin = user?.role === 'admin'
   const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin)
@@ -61,6 +72,7 @@ export function Sidebar({ storeName = 'VentasPOS', user }: { storeName?: string;
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {visibleNavItems.map((item) => {
           const isActive = pathname === item.href
+          const showBadge = item.showLowStock && lowStockCount > 0
           return (
             <Link
               key={item.href + item.label}
@@ -73,7 +85,17 @@ export function Sidebar({ storeName = 'VentasPOS', user }: { storeName?: string;
               )}
             >
               <item.icon className="w-4 h-4 flex-shrink-0" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {showBadge && (
+                <span
+                  className={cn(
+                    'inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full flex-shrink-0',
+                    isActive ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600'
+                  )}
+                >
+                  {lowStockCount > 99 ? '99+' : lowStockCount}
+                </span>
+              )}
             </Link>
           )
         })}
@@ -100,6 +122,18 @@ export function Sidebar({ storeName = 'VentasPOS', user }: { storeName?: string;
           )
         })}
       </div>
+
+      {/* Low stock warning */}
+      {lowStockCount > 0 && (
+        <div className="px-3 pb-2">
+          <div className="flex items-start gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-orange-500 flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-orange-700 leading-tight">
+              {lowStockCount} producto{lowStockCount > 1 ? 's' : ''} con stock bajo
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* User + logout */}
       {user && (

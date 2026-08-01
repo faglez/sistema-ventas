@@ -121,6 +121,7 @@ export function OrdersClient({ initialProducts, initialCustomers, taxRate = 11, 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <ProductGrid
             products={filteredProducts}
+            allProducts={initialProducts}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             sortOrder={sortOrder}

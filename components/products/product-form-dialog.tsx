@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, X, Loader2, Upload, ImageIcon, Link } from 'lucide-react'
+import { Plus, X, Loader2, Upload, ImageIcon, Link, Barcode } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Product, ProductSize, ProductStatus } from '@/types'
 import type { ProductFormData } from '@/lib/actions/products'
@@ -42,6 +42,7 @@ const empty: ProductFormData = {
   image: '',
   stock: 0,
   status: 'activo',
+  barcode: '',
 }
 
 function toFormData(p: Product): ProductFormData {
@@ -54,6 +55,7 @@ function toFormData(p: Product): ProductFormData {
     image: p.image,
     stock: p.stock,
     status: p.status,
+    barcode: p.barcode ?? '',
   }
 }
 
@@ -377,6 +379,23 @@ export function ProductFormDialog({ open, product, onClose, onSave, categories, 
               </div>
             </div>
             {errors.sizes && <p className="text-xs text-red-500">{errors.sizes}</p>}
+          </div>
+
+          {/* Código de barras */}
+          <div className="col-span-2 space-y-1.5">
+            <Label className="text-xs font-medium text-gray-700">Código de barras (opcional)</Label>
+            <div className="relative">
+              <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                value={form.barcode ?? ''}
+                onChange={(e) => set('barcode', e.target.value)}
+                placeholder="EAN-13, UPC, o código personalizado..."
+                className="pl-9 font-mono text-sm"
+              />
+            </div>
+            <p className="text-[11px] text-gray-400">
+              Puedes escanear el código con un lector o ingresarlo manualmente.
+            </p>
           </div>
 
           {/* Colores */}

@@ -17,6 +17,7 @@ export interface Product {
   image: string
   stock: number
   status: ProductStatus
+  barcode?: string
 }
 
 export interface CartItem {

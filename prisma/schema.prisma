@@ -17,6 +17,7 @@ model Product {
   image    String
   stock    Int
   status   String @default("activo")
+  barcode  String? @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

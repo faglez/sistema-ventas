@@ -11,6 +11,7 @@ export default async function ProductsPage() {
       clothingSizes={settings.clothingSizes}
       shoeSizes={settings.shoeSizes}
       currency={settings.currency}
+      lowStockThreshold={settings.lowStockThreshold}
     />
   )
 }

@@ -139,6 +139,17 @@ export function SettingsForm({ initial }: SettingsFormProps) {
               Se aplica el <span className="font-medium text-gray-600">{form.taxRate}%</span> sobre el subtotal en cada venta
             </p>
           </div>
+          <div className="max-w-xs">
+            <label className="text-xs font-medium text-gray-500 block mb-1.5">Umbral de stock bajo (unidades)</label>
+            <Input
+              type="number" min="1" max="999" step="1"
+              value={form.lowStockThreshold}
+              onChange={(e) => set('lowStockThreshold', parseInt(e.target.value) || 1)}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Se mostrará alerta cuando el stock sea ≤ <span className="font-medium text-gray-600">{form.lowStockThreshold}</span> unidades
+            </p>
+          </div>
         </CardContent>
       </Card>
 

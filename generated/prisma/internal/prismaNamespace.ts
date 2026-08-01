@@ -934,6 +934,7 @@ export const ProductScalarFieldEnum = {
   image: 'image',
   stock: 'stock',
   status: 'status',
+  barcode: 'barcode',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1034,6 +1035,14 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
 export const ProductOrderByRelevanceFieldEnum = {
   id: 'id',
   name: 'name',
@@ -1041,18 +1050,11 @@ export const ProductOrderByRelevanceFieldEnum = {
   sizes: 'sizes',
   colors: 'colors',
   image: 'image',
-  status: 'status'
+  status: 'status',
+  barcode: 'barcode'
 } as const
 
 export type ProductOrderByRelevanceFieldEnum = (typeof ProductOrderByRelevanceFieldEnum)[keyof typeof ProductOrderByRelevanceFieldEnum]
-
-
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
 export const CustomerOrderByRelevanceFieldEnum = {

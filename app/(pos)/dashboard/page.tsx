@@ -1,15 +1,19 @@
-import { getDashboardMetrics } from '@/lib/actions/transactions'
-import { getTransactions } from '@/lib/actions/transactions'
+import { getDashboardMetrics, getTransactions } from '@/lib/actions/transactions'
+import { getLowStockProducts } from '@/lib/actions/products'
+import { getSettings } from '@/lib/actions/settings'
 import { MetricCard } from '@/components/dashboard/metric-card'
 import { SalesChart } from '@/components/dashboard/sales-chart'
 import { RecentSalesTable } from '@/components/dashboard/recent-sales-table'
-import { DollarSign, ShoppingBag, Users, Package } from 'lucide-react'
+import { DollarSign, ShoppingBag, Users, Package, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
-  const [{ metrics: m, salesData }, transactions] = await Promise.all([
+  const [{ metrics: m, salesData }, transactions, { lowStockThreshold }] = await Promise.all([
     getDashboardMetrics(),
     getTransactions(),
+    getSettings(),
   ])
+  const lowStockProducts = await getLowStockProducts(lowStockThreshold)
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -17,6 +21,23 @@ export default async function DashboardPage() {
         <p className="text-[10px] text-gray-400 uppercase tracking-widest">Menú &rsaquo; Panel</p>
         <h1 className="text-xl font-bold text-gray-900 mt-0.5">Panel Principal</h1>
       </div>
+
+      {lowStockProducts.length > 0 && (
+        <Link href="/products">
+          <div className="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 hover:bg-orange-100 transition-colors cursor-pointer">
+            <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-orange-800">
+                {lowStockProducts.length} producto{lowStockProducts.length > 1 ? 's' : ''} con stock bajo (≤ {lowStockThreshold} unidades)
+              </p>
+              <p className="text-xs text-orange-600 mt-0.5 truncate">
+                {lowStockProducts.map((p) => `${p.name} (${p.stock})`).join(' · ')}
+              </p>
+            </div>
+            <span className="text-xs text-orange-500 flex-shrink-0 underline">Ver productos →</span>
+          </div>
+        </Link>
+      )}
 
       <div className="grid grid-cols-4 gap-4">
         <MetricCard

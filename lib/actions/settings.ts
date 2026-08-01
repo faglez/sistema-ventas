@@ -15,6 +15,7 @@ export interface StoreSettings {
   storeAddress: string
   currency: string
   taxRate: number
+  lowStockThreshold: number
   categories: CategoryDef[]
   clothingSizes: string[]
   shoeSizes: string[]
@@ -37,6 +38,7 @@ const DEFAULTS: Omit<StoreSettings, 'categories' | 'clothingSizes' | 'shoeSizes'
   storeAddress: 'Av. Principal 123, Lima, Perú',
   currency: 'PEN',
   taxRate: 11,
+  lowStockThreshold: 5,
 }
 
 function parseJson<T>(raw: string | undefined, fallback: T): T {
@@ -54,6 +56,7 @@ export async function getSettings(): Promise<StoreSettings> {
     storeAddress: map.storeAddress ?? DEFAULTS.storeAddress,
     currency: map.currency ?? DEFAULTS.currency,
     taxRate: parseFloat(map.taxRate ?? String(DEFAULTS.taxRate)),
+    lowStockThreshold: parseInt(map.lowStockThreshold ?? String(DEFAULTS.lowStockThreshold), 10),
     categories: parseJson(map.categories, DEFAULT_CATEGORIES),
     clothingSizes: parseJson(map.clothingSizes, DEFAULT_CLOTHING_SIZES),
     shoeSizes: parseJson(map.shoeSizes, DEFAULT_SHOE_SIZES),
@@ -61,8 +64,9 @@ export async function getSettings(): Promise<StoreSettings> {
 }
 
 export async function saveSettings(data: StoreSettings): Promise<void> {
-  const { categories, clothingSizes, shoeSizes, ...scalar } = data
-  const scalarEntries = (Object.entries(scalar) as [string, string | number][]).map(([key, value]) =>
+  const { categories, clothingSizes, shoeSizes, lowStockThreshold: _lst, ...scalar } = data
+  const scalarWithThreshold = { ...scalar, lowStockThreshold: String(data.lowStockThreshold) }
+  const scalarEntries = (Object.entries(scalarWithThreshold) as [string, string | number][]).map(([key, value]) =>
     prisma.setting.upsert({ where: { key }, update: { value: String(value) }, create: { key, value: String(value) } })
   )
   const jsonEntries = [

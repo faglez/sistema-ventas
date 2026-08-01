@@ -14,6 +14,7 @@ type DbProduct = {
   image: string
   stock: number
   status: string
+  barcode: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -29,11 +30,26 @@ function toProduct(p: DbProduct): Product {
     image: p.image,
     stock: p.stock,
     status: p.status as ProductStatus,
+    barcode: p.barcode ?? undefined,
   }
 }
 
 export async function getProducts(): Promise<Product[]> {
   const products = await prisma.product.findMany({ orderBy: { name: 'asc' } })
+  return products.map(toProduct)
+}
+
+export async function getLowStockCount(threshold: number): Promise<number> {
+  return prisma.product.count({
+    where: { stock: { lte: threshold }, status: { not: 'inactivo' } },
+  })
+}
+
+export async function getLowStockProducts(threshold: number): Promise<Product[]> {
+  const products = await prisma.product.findMany({
+    where: { stock: { lte: threshold }, status: { not: 'inactivo' } },
+    orderBy: { stock: 'asc' },
+  })
   return products.map(toProduct)
 }
 
@@ -46,6 +62,7 @@ export interface ProductFormData {
   image: string
   stock: number
   status: ProductStatus
+  barcode?: string
 }
 
 export async function createProduct(data: ProductFormData): Promise<Product> {
@@ -59,6 +76,7 @@ export async function createProduct(data: ProductFormData): Promise<Product> {
       image: data.image,
       stock: data.stock,
       status: data.status,
+      barcode: data.barcode?.trim() || null,
     },
   })
   revalidatePath('/products')
@@ -78,6 +96,7 @@ export async function updateProduct(id: string, data: ProductFormData): Promise<
       image: data.image,
       stock: data.stock,
       status: data.status,
+      barcode: data.barcode?.trim() || null,
     },
   })
   revalidatePath('/products')
